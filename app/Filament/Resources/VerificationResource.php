@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\RegistrationStatus;
 use App\Filament\Resources\VerificationResource\Pages;
 use App\Filament\Resources\VerificationResource\RelationManagers;
 use App\Models\Registration;
@@ -49,14 +50,15 @@ class VerificationResource extends Resource
                     ->label('Nama Siswa')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',
-                        'verified' => 'primary',
-                        'approved' => 'success',
-                        'rejected' => 'danger',
-                        default => 'gray',
-                    }),
+                    ->color(fn (RegistrationStatus $state): string => match ($state) {
+                        RegistrationStatus::Pending => 'warning',
+                        RegistrationStatus::Verified => 'primary',
+                        RegistrationStatus::Approved => 'success',
+                        RegistrationStatus::Rejected => 'danger',
+                    })
+                    ->formatStateUsing(fn (RegistrationStatus $state) => ucfirst($state->value)),
                 Tables\Columns\TextColumn::make('registered_at')
                     ->dateTime()
                     ->sortable(),
@@ -64,10 +66,10 @@ class VerificationResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'pending' => 'Menunggu Verifikasi',
-                        'verified' => 'Terverifikasi',
-                        'approved' => 'Disetujui',
-                        'rejected' => 'Ditolak',
+                        RegistrationStatus::Pending->value => 'Menunggu Verifikasi',
+                        RegistrationStatus::Verified->value => 'Terverifikasi',
+                        RegistrationStatus::Approved->value => 'Disetujui',
+                        RegistrationStatus::Rejected->value => 'Ditolak',
                     ]),
             ])
             ->actions([
@@ -78,17 +80,17 @@ class VerificationResource extends Resource
                     ->label('Verifikasi')
                     ->icon('heroicon-o-check-circle')
                     ->color('primary')
-                    ->action(fn (Registration $record) => $record->update(['status' => 'verified']))
+                    ->action(fn (Registration $record) => $record->update(['status' => RegistrationStatus::Verified]))
                     ->requiresConfirmation()
-                    ->visible(fn (Registration $record): bool => $record->status === 'pending'),
+                    ->visible(fn (Registration $record): bool => $record->status === RegistrationStatus::Pending),
 
                 Action::make('approve')
                     ->label('Setujui')
                     ->icon('heroicon-o-hand-thumb-up')
                     ->color('success')
-                    ->action(fn (Registration $record) => $record->update(['status' => 'approved']))
+                    ->action(fn (Registration $record) => $record->update(['status' => RegistrationStatus::Approved]))
                     ->requiresConfirmation()
-                    ->visible(fn (Registration $record): bool => $record->status === 'verified'),
+                    ->visible(fn (Registration $record): bool => $record->status === RegistrationStatus::Verified),
 
                 Action::make('reject')
                     ->label('Tolak')
@@ -101,11 +103,11 @@ class VerificationResource extends Resource
                     ])
                     ->action(function (array $data, Registration $record): void {
                         $record->update([
-                            'status' => 'rejected',
+                            'status' => RegistrationStatus::Rejected,
                             'admin_notes' => $data['admin_notes'],
                         ]);
                     })
-                    ->visible(fn (Registration $record): bool => in_array($record->status, ['pending', 'verified'])),
+                    ->visible(fn (Registration $record): bool => in_array($record->status, [RegistrationStatus::Pending, RegistrationStatus::Verified])),
             ])
             ->bulkActions([
                 //

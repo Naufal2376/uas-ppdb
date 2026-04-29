@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\RegistrantResource\RelationManagers;
 
+use App\Enums\DocumentStatus;
+use App\Enums\DocumentType;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -18,9 +20,15 @@ class DocumentsRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('document_type')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Select::make('document_type')
+                    ->label('Tipe Dokumen')
+                    ->options([
+                        'foto' => 'Pas Foto',
+                        'kk' => 'Kartu Keluarga',
+                        'ijazah' => 'Ijazah / SKL',
+                        'akta' => 'Akta Kelahiran',
+                    ])
+                    ->required(),
             ]);
     }
 
@@ -29,19 +37,27 @@ class DocumentsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('document_type')
             ->columns([
-                Tables\Columns\TextColumn::make('document_type')->label('Tipe Dokumen'),
+                Tables\Columns\TextColumn::make('document_type')
+                    ->label('Tipe Dokumen')
+                    ->formatStateUsing(fn (DocumentType $state) => match ($state) {
+                        DocumentType::Foto => 'Pas Foto',
+                        DocumentType::KartuKeluarga => 'Kartu Keluarga',
+                        DocumentType::Ijazah => 'Ijazah / SKL',
+                        DocumentType::AktaKelahiran => 'Akta Kelahiran',
+                    }),
                 Tables\Columns\ImageColumn::make('file_path')
                     ->label('Preview Dokumen')
                     ->square()
                     ->defaultImageUrl(fn ($record) => asset('storage/' . $record->file_path)),
                 Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',
-                        'verified' => 'primary',
-                        'rejected' => 'danger',
-                        default => 'gray',
-                    }),
+                    ->color(fn (DocumentStatus $state): string => match ($state) {
+                        DocumentStatus::Pending => 'warning',
+                        DocumentStatus::Verified => 'primary',
+                        DocumentStatus::Rejected => 'danger',
+                    })
+                    ->formatStateUsing(fn (DocumentStatus $state) => $state->getLabel()),
             ])
             ->filters([
                 //
