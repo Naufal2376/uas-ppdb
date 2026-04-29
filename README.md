@@ -260,7 +260,7 @@ CREATE TABLE registrations (
 
 ### Step 1: Clone Repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/Naufal2376/uas-ppdb
 cd uas-ppdb
 ```
 
