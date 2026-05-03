@@ -25,6 +25,7 @@
                         <a href="{{ route('filament.student.pages.dashboard') }}" class="font-medium text-gray-600 hover:text-sky-600 transition-colors">Dashboard Saya</a>
                     @endif
                 @else
+                    <a href="{{ route('tentangkami') }}" class="font-medium text-gray-600 hover:text-sky-600 transition-colors px-4 py-2">Tentang Kami</a>
                     <a href="{{ route('filament.student.auth.login') }}" class="font-medium text-gray-600 hover:text-sky-600 transition-colors px-4 py-2">Masuk</a>
                     <a href="{{ route('filament.student.auth.register') }}" class="ml-2 rounded-lg bg-sky-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-sky-700 transition-all">Daftar Sekarang</a>
                 @endauth
@@ -128,3 +129,4 @@
 
 </body>
 </html>
+

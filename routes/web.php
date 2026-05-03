@@ -12,3 +12,5 @@ Route::middleware('auth')->group(function () {
         ->name('student.download-proof');
 });
 
+Route::view('/tentang-kami', 'tentangkami')->name('tentangkami');
+
