@@ -7,8 +7,16 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Ini rute yang wajib login (kamar terkunci)
 Route::middleware('auth')->group(function () {
     Route::get('/student/download-proof', [PdfController::class, 'downloadProof'])
         ->name('student.download-proof');
+}); // <-- Pintu kamarnya ditutup sampai sini aja!
+
+Route::get('/faq', function () {
+    return view('faq-kontak');
 });
 
+Route::get('/pengumuman', function () {
+    return view('pengumuman');
+});
