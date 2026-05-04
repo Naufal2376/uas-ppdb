@@ -17,8 +17,9 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\DB;
-use App\Enums\Gender;
+use Illuminate\Support\HtmlString;
 
 class RegistrationWizard extends Page implements HasForms
 {
@@ -27,21 +28,24 @@ class RegistrationWizard extends Page implements HasForms
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
 
     protected static ?string $navigationLabel = 'Pendaftaran PPDB';
-    
+
     protected static ?string $title = 'Formulir Pendaftaran Siswa Baru';
 
     protected static ?string $slug = 'pendaftaran';
 
     protected static string $view = 'filament.student.pages.registration-wizard';
 
+    public static function canAccess(): bool
+    {
+        return !\App\Models\Registration::where('user_id', auth()->id())->exists();
+    }
+
     public ?array $data = [];
 
     public function mount(): void
     {
-        $user = auth()->user();
-        
-        // If already registered
-        if ($user->registration) {
+        // If already registered, redirect to dashboard
+        if (\App\Models\Registration::where('user_id', auth()->id())->exists()) {
             $this->redirect(Dashboard::getUrl());
             return;
         }
@@ -168,7 +172,7 @@ class RegistrationWizard extends Page implements HasForms
                                 ->maxSize(2048),
                         ]),
                 ])
-                ->submitAction(new \Illuminate\Support\HtmlString(\Illuminate\Support\Facades\Blade::render(<<<'BLADE'
+                    ->submitAction(new HtmlString(Blade::render(<<<'BLADE'
                     <x-filament::button
                         type="submit"
                         size="sm"
@@ -176,50 +180,70 @@ class RegistrationWizard extends Page implements HasForms
                     >
                         Submit Pendaftaran
                     </x-filament::button>
-                BLADE)))
+                BLADE))),
             ])
             ->statePath('data');
     }
 
     public function submit(): void
     {
-        $state = $this->form->getState();
         $user = auth()->user();
 
+        // Prevent double submission
+        if ($user->registration()->exists()) {
+            Notification::make()
+                ->title('Pendaftaran Sudah Ada')
+                ->warning()
+                ->body('Anda sudah melakukan pendaftaran sebelumnya.')
+                ->send();
+
+            $this->redirect(Dashboard::getUrl());
+            return;
+        }
+
+        $state = $this->form->getState();
+
         DB::transaction(function () use ($state, $user) {
-            // Student Detail
-            StudentDetail::create([
-                'user_id' => $user->id,
-                'nisn' => $state['nisn'],
-                'nik' => $state['nik'],
-                'place_of_birth' => $state['place_of_birth'],
-                'date_of_birth' => $state['date_of_birth'],
-                'gender' => $state['gender'],
-                'address' => $state['address'],
-                'phone_number' => $state['phone_number'],
-            ]);
+            // Student Detail (updateOrCreate to avoid duplicates)
+            StudentDetail::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'nisn' => $state['nisn'],
+                    'nik' => $state['nik'],
+                    'place_of_birth' => $state['place_of_birth'],
+                    'date_of_birth' => $state['date_of_birth'],
+                    'gender' => $state['gender'],
+                    'address' => $state['address'],
+                    'phone_number' => $state['phone_number'],
+                ]
+            );
 
             // Parent Detail
-            ParentDetail::create([
-                'user_id' => $user->id,
-                'father_name' => $state['father_name'],
-                'father_occupation' => $state['father_occupation'],
-                'father_income' => $state['father_income'],
-                'mother_name' => $state['mother_name'],
-                'mother_occupation' => $state['mother_occupation'],
-                'mother_income' => $state['mother_income'],
-                'guardian_phone' => $state['guardian_phone'],
-            ]);
+            ParentDetail::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'father_name' => $state['father_name'],
+                    'father_occupation' => $state['father_occupation'],
+                    'father_income' => $state['father_income'],
+                    'mother_name' => $state['mother_name'],
+                    'mother_occupation' => $state['mother_occupation'],
+                    'mother_income' => $state['mother_income'],
+                    'guardian_phone' => $state['guardian_phone'],
+                ]
+            );
 
             // School Origin
-            SchoolOrigin::create([
-                'user_id' => $user->id,
-                'school_name' => $state['school_name'],
-                'npsn' => $state['npsn'],
-                'graduation_year' => $state['graduation_year'],
-            ]);
+            SchoolOrigin::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'school_name' => $state['school_name'],
+                    'npsn' => $state['npsn'],
+                    'graduation_year' => $state['graduation_year'],
+                ]
+            );
 
-            // Documents
+            // Documents — delete old ones then re-create
+            Document::where('user_id', $user->id)->delete();
             $docTypes = ['foto', 'kk', 'ijazah', 'akta'];
             foreach ($docTypes as $type) {
                 if (isset($state[$type])) {
@@ -232,12 +256,15 @@ class RegistrationWizard extends Page implements HasForms
                 }
             }
 
-            // Create Registration mapping
-            Registration::create([
-                'user_id' => $user->id,
-                'registration_number' => 'REG-' . date('Y') . '-' . str_pad((string)$user->id, 4, '0', STR_PAD_LEFT),
-                'status' => 'pending',
-            ]);
+            // Create Registration record
+            Registration::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'registration_number' => 'REG-' . date('Y') . '-' . str_pad((string) $user->id, 4, '0', STR_PAD_LEFT),
+                    'status' => 'pending',
+                    'registered_at' => now(),
+                ]
+            );
         });
 
         Notification::make()

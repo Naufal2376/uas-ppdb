@@ -27,14 +27,23 @@ class StudentPanelProvider extends PanelProvider
             ->path('student')
             ->login()
             ->registration()
+            ->font('Plus Jakarta Sans')
+            ->brandName('Portal PPDB')
             ->colors([
-                'primary' => \Filament\Support\Colors\Color::hex('#0284c7'),
-                'success' => \Filament\Support\Colors\Color::hex('#059669'),
-                'warning' => \Filament\Support\Colors\Color::hex('#f59e0b'),
-                'danger'  => \Filament\Support\Colors\Color::hex('#e11d48'),
-                'gray'    => \Filament\Support\Colors\Color::hex('#64748b'),
+                'primary' => \Filament\Support\Colors\Color::Sky,
+                'success' => \Filament\Support\Colors\Color::Emerald,
+                'warning' => \Filament\Support\Colors\Color::Amber,
+                'danger'  => \Filament\Support\Colors\Color::Rose,
+                'gray'    => \Filament\Support\Colors\Color::Slate,
             ])
-            ->viteTheme('resources/css/app.css')
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::HEAD_END,
+                fn (): string => \Illuminate\Support\Facades\Blade::render('@vite(\'resources/css/app.css\')')
+            )
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::USER_MENU_BEFORE,
+                fn (): string => '<div class="text-sm font-medium text-slate-700 dark:text-slate-300 mr-4">Halo, ' . (auth()->user()?->name ?? 'Guest') . ' 👋</div>'
+            )
             ->discoverResources(in: app_path('Filament/Student/Resources'), for: 'App\\Filament\\Student\\Resources')
             ->discoverPages(in: app_path('Filament/Student/Pages'), for: 'App\\Filament\\Student\\Pages')
             ->pages([
