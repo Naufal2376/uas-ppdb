@@ -5,36 +5,6 @@
 
 @section('content')
 
-    @php
-        // Data Pengumuman statis yang sudah disesuaikan dengan tema IT Academy
-        $pengumumans = [
-            [
-                'tanggal' => '01',
-                'bulan' => 'Mei',
-                'tipe' => 'Penting',
-                'judul' => 'Perpanjangan Waktu Pendaftaran Gelombang 1',
-                'isi' => 'Dikarenakan tingginya antusiasme calon Tech-Leader dan proses sinkronisasi server, waktu penutupan pendaftaran Gelombang 1 diperpanjang hingga tanggal 10 Mei 2026 pukul 23:59 WIB. Pastikan berkas digital Anda telah terunggah sempurna.',
-                'warna_badge' => 'bg-red-500/10 text-red-600 border-red-500/20'
-            ],
-            [
-                'tanggal' => '28',
-                'bulan' => 'Apr',
-                'tipe' => 'Panduan',
-                'judul' => 'Akses Fitur Cetak Kartu Pendaftaran Tersedia',
-                'isi' => 'Bagi peserta yang status berkasnya telah disetujui (Verified), tombol Cetak Bukti Pendaftaran (PDF) kini sudah dapat diakses melalui Dashboard Siswa masing-masing. Harap menyimpan dokumen tersebut dalam bentuk digital dan cetak fisik.',
-                'warna_badge' => 'bg-sky-500/10 text-sky-600 border-sky-500/20'
-            ],
-            [
-                'tanggal' => '25',
-                'bulan' => 'Apr',
-                'tipe' => 'Jadwal',
-                'judul' => 'Jadwal Computer Based Test (CBT) Placement',
-                'isi' => 'Bagi calon siswa yang telah dinyatakan Lulus Seleksi Berkas, harap bersiap untuk mengikuti tes penempatan (CBT) yang akan dilaksanakan di lab komputer pada tanggal 15 Mei 2026. Bawa kartu identitas dan kartu pendaftaran Anda.',
-                'warna_badge' => 'bg-teal-500/10 text-teal-600 border-teal-500/20'
-            ],
-        ];
-    @endphp
-
    <!-- ================= HERO SECTION (TECH THEME) ================= -->
     <section class="relative pt-32 pb-32 lg:pt-40 lg:pb-40 bg-slate-900 overflow-hidden border-b border-slate-800">
 
@@ -84,7 +54,7 @@
                     <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H14"/></svg>
                 </div>
                 <div>
-                    <div class="text-2xl font-black text-slate-800 tracking-tight">{{ count($pengumumans) }} Berita</div>
+                    <div class="text-2xl font-black text-slate-800 tracking-tight">{{ $pengumumans->count() }} Berita</div>
                     <div class="text-slate-500 font-bold text-sm mt-0.5">Update Pengumuman</div>
                 </div>
             </div>
@@ -94,8 +64,14 @@
                     <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </div>
                 <div>
-                    <div class="text-2xl font-black text-slate-800 tracking-tight">10 Mei</div>
-                    <div class="text-slate-500 font-bold text-sm mt-0.5">Batas Gelombang 1</div>
+                    <div class="text-2xl font-black text-slate-800 tracking-tight">
+                        @if($pengumumans->isNotEmpty())
+                            {{ $pengumumans->first()->published_at ? $pengumumans->first()->published_at->translatedFormat('d M') : 'Terbaru' }}
+                        @else
+                            —
+                        @endif
+                    </div>
+                    <div class="text-slate-500 font-bold text-sm mt-0.5">Update Terakhir</div>
                 </div>
             </div>
         </div>
@@ -105,7 +81,7 @@
     <section class="max-w-4xl mx-auto px-6 pb-28">
         <div class="space-y-6">
 
-            @foreach($pengumumans as $item)
+            @forelse($pengumumans as $item)
             <article class="bg-white rounded-[2rem] border border-slate-100 shadow-lg shadow-slate-200/40 p-6 sm:p-10 flex flex-col sm:flex-row items-start sm:gap-8 hover:border-sky-300 hover:shadow-2xl hover:shadow-sky-100 transition-all duration-500 relative overflow-hidden group">
 
                 <!-- Efek garis biru di kiri saat di-hover -->
@@ -113,15 +89,15 @@
 
                 <!-- Date Badge -->
                 <div class="flex-shrink-0 w-20 h-20 bg-slate-50 rounded-[1.5rem] border border-slate-100 flex flex-col items-center justify-center text-slate-700 mb-6 sm:mb-0 group-hover:bg-sky-50 group-hover:border-sky-200 group-hover:text-sky-600 transition-all duration-300 shadow-inner group-hover:scale-105">
-                    <span class="text-3xl font-black leading-none">{{ $item['tanggal'] }}</span>
-                    <span class="text-[10px] font-bold uppercase tracking-widest mt-1">{{ $item['bulan'] }}</span>
+                    <span class="text-3xl font-black leading-none">{{ $item->published_at ? $item->published_at->format('d') : $item->created_at->format('d') }}</span>
+                    <span class="text-[10px] font-bold uppercase tracking-widest mt-1">{{ $item->published_at ? $item->published_at->translatedFormat('M') : $item->created_at->translatedFormat('M') }}</span>
                 </div>
 
                 <!-- Content -->
                 <div class="flex-1">
                     <div class="flex items-center gap-3 mb-4">
-                        <span class="inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border {{ $item['warna_badge'] }}">
-                            {{ $item['tipe'] }}
+                        <span class="inline-flex items-center px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border bg-sky-500/10 text-sky-600 border-sky-500/20">
+                            Pengumuman
                         </span>
                         <!-- New Badge Indicator -->
                         @if($loop->first)
@@ -131,11 +107,20 @@
                             </span>
                         @endif
                     </div>
-                    <h2 class="text-2xl font-black text-slate-800 mb-3 tracking-tight group-hover:text-sky-600 transition-colors">{{ $item['judul'] }}</h2>
-                    <p class="text-slate-500 leading-relaxed font-medium">{{ $item['isi'] }}</p>
+                    <h2 class="text-2xl font-black text-slate-800 mb-3 tracking-tight group-hover:text-sky-600 transition-colors">{{ $item->title }}</h2>
+                    <p class="text-slate-500 leading-relaxed font-medium">{{ Str::limit(strip_tags($item->content), 250) }}</p>
                 </div>
             </article>
-            @endforeach
+            @empty
+                <!-- State Kosong -->
+                <div class="text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200 shadow-sm">
+                    <div class="w-20 h-20 mx-auto bg-slate-50 rounded-2xl flex items-center justify-center mb-6 border border-slate-100">
+                        <svg class="w-10 h-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9.5a2.5 2.5 0 00-2.5-2.5H14"/></svg>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-700 mb-3">Belum Ada Pengumuman</h3>
+                    <p class="text-slate-400 font-medium max-w-md mx-auto">Panitia PPDB belum mempublikasikan pengumuman. Silakan kunjungi halaman ini secara berkala untuk informasi terbaru.</p>
+                </div>
+            @endforelse
 
         </div>
     </section>

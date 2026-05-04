@@ -65,14 +65,21 @@
                     <!-- Divider Sultan -->
                     <div class="h-6 w-px bg-slate-200 mx-6"></div>
 
-                    <!-- Tombol Aksi -->
+                    <!-- Tombol Aksi (Auth-Aware) -->
                     <div class="flex items-center gap-3">
-                        <a href="/student/login" class="text-sm font-bold text-slate-600 hover:text-sky-600 px-4 py-2 transition-colors">
-                            Masuk
-                        </a>
-                        <a href="/student/register" class="bg-slate-800 hover:bg-sky-600 text-white text-sm font-bold px-7 py-3 rounded-xl shadow-lg shadow-slate-200 hover:shadow-sky-200 transition-all duration-300 transform active:scale-95">
-                            Daftar Sekarang
-                        </a>
+                        @auth
+                            <a href="{{ auth()->user()->isAdmin() ? '/admin' : '/student' }}" class="bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold px-7 py-3 rounded-xl shadow-lg shadow-sky-200 hover:shadow-sky-300 transition-all duration-300 transform active:scale-95 flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                                Dashboard
+                            </a>
+                        @else
+                            <a href="/student/login" class="text-sm font-bold text-slate-600 hover:text-sky-600 px-4 py-2 transition-colors">
+                                Masuk
+                            </a>
+                            <a href="/student/register" class="bg-slate-800 hover:bg-sky-600 text-white text-sm font-bold px-7 py-3 rounded-xl shadow-lg shadow-slate-200 hover:shadow-sky-200 transition-all duration-300 transform active:scale-95">
+                                Daftar Sekarang
+                            </a>
+                        @endauth
                     </div>
                 </div>
 
@@ -98,8 +105,15 @@
                 <a href="/tentang-kami" @click="mobileMenuOpen = false" class="block px-4 py-3 rounded-xl text-base font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 transition-colors">Tentang Kami</a>
                 <a href="/faq" @click="mobileMenuOpen = false" class="block px-4 py-3 rounded-xl text-base font-bold text-slate-700 hover:bg-sky-50 hover:text-sky-600 transition-colors">Bantuan FAQ</a>
                 <hr class="border-slate-100 my-4">
-                <a href="/student/login" class="block w-full text-center bg-slate-100 text-slate-800 font-bold py-3.5 rounded-xl mb-3 transition-colors">Masuk Portal</a>
-                <a href="/student/register" class="block w-full text-center bg-sky-600 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors">Buat Akun Sekarang</a>
+                @auth
+                    <a href="{{ auth()->user()->isAdmin() ? '/admin' : '/student' }}" class="block w-full text-center bg-sky-600 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                        Buka Dashboard
+                    </a>
+                @else
+                    <a href="/student/login" class="block w-full text-center bg-slate-100 text-slate-800 font-bold py-3.5 rounded-xl mb-3 transition-colors">Masuk Portal</a>
+                    <a href="/student/register" class="block w-full text-center bg-sky-600 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors">Buat Akun Sekarang</a>
+                @endauth
             </div>
         </div>
     </nav>
@@ -110,7 +124,7 @@
     </main>
 
     <!-- ================= FOOTER PROFESIONAL ================= -->
-    <footer class="bg-slate-900 pt-20 pb-10 mt-auto border-t-[6px] border-sky-600 relative overflow-hidden">
+    <footer class="bg-slate-900 pt-20 pb-0 mt-auto border-t-[6px] border-sky-600 relative overflow-hidden">
         <!-- Background Pattern -->
         <div class="absolute inset-0 opacity-5">
             <svg class="h-full w-full" xmlns="http://www.w3.org/2000/svg">
@@ -166,8 +180,12 @@
                 <div class="lg:col-span-3">
                     <h3 class="text-white font-bold tracking-wider uppercase mb-6 text-sm">Layanan Pendaftar</h3>
                     <ul class="space-y-4">
-                        <li><a href="/student/login" class="text-slate-400 hover:text-sky-400 transition-colors text-sm flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg> Login Portal</a></li>
-                        <li><a href="/student/register" class="text-slate-400 hover:text-sky-400 transition-colors text-sm flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg> Buat Akun Baru</a></li>
+                        @auth
+                            <li><a href="{{ auth()->user()->isAdmin() ? '/admin' : '/student' }}" class="text-slate-400 hover:text-sky-400 transition-colors text-sm flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg> Dashboard Saya</a></li>
+                        @else
+                            <li><a href="/student/login" class="text-slate-400 hover:text-sky-400 transition-colors text-sm flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg> Login Portal</a></li>
+                            <li><a href="/student/register" class="text-slate-400 hover:text-sky-400 transition-colors text-sm flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg> Buat Akun Baru</a></li>
+                        @endauth
                         <li><a href="/#cek-status" class="text-slate-400 hover:text-sky-400 transition-colors text-sm flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> Cek Status Berkas</a></li>
                     </ul>
                 </div>
@@ -196,9 +214,8 @@
             </div>
 
             <!-- Bottom Bar: Copyright -->
-            <div class="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="pt-8 pb-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
                 <p class="text-slate-500 text-sm text-center md:text-left">
-                    <!-- Update Tahun & Nama Institusi -->
                     &copy; 2026 SMA IT Global Academy. Hak Cipta Dilindungi.
                 </p>
                 <div class="flex items-center gap-6 text-sm">

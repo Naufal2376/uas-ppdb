@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PdfController;
+use App\Models\Announcement;
 
 Route::get('/', function () {
     return view('welcome');
@@ -20,5 +21,9 @@ Route::get('/faq', function () {
 Route::view('/tentang-kami', 'tentangkami')->name('tentangkami');
 
 Route::get('/pengumuman', function () {
-    return view('pengumuman');
+    $pengumumans = Announcement::where('is_published', true)
+        ->orderByDesc('published_at')
+        ->get();
+
+    return view('pengumuman', compact('pengumumans'));
 });

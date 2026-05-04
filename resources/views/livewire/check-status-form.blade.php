@@ -15,20 +15,36 @@
 
     <!-- Hasil Status -->
     @if ($statusResult)
+        @php
+            $statusValue = $statusResult instanceof \App\Enums\RegistrationStatus ? $statusResult->value : $statusResult;
+        @endphp
         <div class="mt-6 p-6 rounded-2xl border border-slate-100 bg-white shadow-lg transform transition-all animate-fade-in">
             <p class="text-center text-sm text-slate-500 font-medium uppercase tracking-wider mb-2">Status Saat Ini</p>
             <h3 class="text-center text-2xl font-extrabold
-                @if(in_array($statusResult, ['verified', 'approved'])) text-emerald-600
-                @elseif($statusResult === 'pending') text-amber-500
-                @elseif($statusResult === 'rejected') text-rose-600
+                @if(in_array($statusValue, ['verified', 'approved'])) text-emerald-600
+                @elseif($statusValue === 'pending') text-amber-500
+                @elseif($statusValue === 'rejected') text-rose-600
                 @endif
             ">
-                @if($statusResult === 'pending') ⏳ Menunggu Verifikasi
-                @elseif($statusResult === 'verified') 📝 Berkas Diverifikasi
-                @elseif($statusResult === 'approved') 🎉 LULUS
-                @elseif($statusResult === 'rejected') ❌ Ditolak / Perlu Revisi
+                @if($statusValue === 'pending') ⏳ Menunggu Verifikasi
+                @elseif($statusValue === 'verified') 📝 Berkas Diverifikasi
+                @elseif($statusValue === 'approved') 🎉 LULUS — Selamat!
+                @elseif($statusValue === 'rejected') ❌ Ditolak / Perlu Revisi
                 @endif
             </h3>
+
+            {{-- Additional Info for each status --}}
+            <div class="mt-4 text-center">
+                @if($statusValue === 'pending')
+                    <p class="text-slate-400 text-sm">Berkas Anda sedang dalam antrean untuk diperiksa oleh panitia.</p>
+                @elseif($statusValue === 'verified')
+                    <p class="text-slate-400 text-sm">Berkas lengkap dan terverifikasi. Menunggu keputusan seleksi akhir.</p>
+                @elseif($statusValue === 'approved')
+                    <p class="text-emerald-500 text-sm font-bold">Anda diterima di SMA IT Global Academy! Silakan login untuk mencetak bukti pendaftaran.</p>
+                @elseif($statusValue === 'rejected')
+                    <p class="text-rose-400 text-sm">Silakan hubungi panitia atau periksa kembali kelengkapan berkas Anda.</p>
+                @endif
+            </div>
         </div>
     @endif
 
