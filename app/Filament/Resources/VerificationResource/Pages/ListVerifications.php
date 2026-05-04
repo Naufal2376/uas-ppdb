@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\VerificationResource\Pages;
 
 use App\Filament\Resources\VerificationResource;
-use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListVerifications extends ListRecords
@@ -13,7 +12,7 @@ class ListVerifications extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            // No create action — registrations are created by students.
         ];
     }
 }

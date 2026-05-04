@@ -3,16 +3,18 @@
 namespace App\Filament\Resources\RegistrantResource\Pages;
 
 use App\Filament\Resources\RegistrantResource;
-use Filament\Resources\Pages\ListRecords;
+use Filament\Actions;
+use Filament\Resources\Pages\ViewRecord;
 
-class ListRegistrants extends ListRecords
+class ViewRegistrant extends ViewRecord
 {
     protected static string $resource = RegistrantResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-            // Admin does not create registrants — students register themselves.
+            Actions\EditAction::make()
+                ->icon('heroicon-o-pencil-square'),
         ];
     }
 }
