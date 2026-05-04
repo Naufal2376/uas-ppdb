@@ -14,9 +14,7 @@
             {{-- Welcome Banner --}}
             <div class="ppdb-hero-banner p-8 md:p-10 ppdb-fade-in">
                 <div class="relative z-10 flex flex-col md:flex-row items-center gap-6">
-                    <div class="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
-                        <x-heroicon-o-academic-cap class="h-8 w-8 text-white" />
-                    </div>
+                    <img src="{{ asset('images/logo.jpg') }}" alt="Logo PPDB" class="h-16 w-16 shrink-0 rounded-xl object-cover ring-2 ring-white/30 shadow-lg" />
                     <div class="text-center md:text-left">
                         <h2 class="text-2xl font-bold text-white tracking-tight">
                             Selamat Datang, {{ $user->name }}! 👋
@@ -78,15 +76,18 @@
             {{-- Header Banner --}}
             <div class="ppdb-hero-banner p-8 md:p-10 ppdb-fade-in">
                 <div class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-                    <div>
-                        <p class="text-xs font-medium text-sky-200 uppercase tracking-wider">Pendaftaran Berhasil</p>
-                        <p class="text-2xl md:text-3xl font-bold text-white font-mono tracking-tight mt-1">
-                            {{ $registration->registration_number }}
-                        </p>
-                        <p class="mt-2 text-sky-100 text-sm">
-                            <span class="font-semibold text-white">{{ $user->name }}</span>
-                            &mdash; Terdaftar {{ $registration->created_at->translatedFormat('d F Y') }}
-                        </p>
+                    <div class="flex items-center gap-5">
+                        <img src="{{ asset('images/logo.jpg') }}" alt="Logo PPDB" class="h-14 w-14 shrink-0 rounded-xl object-cover ring-2 ring-white/30 shadow-lg" />
+                        <div>
+                            <p class="text-xs font-medium text-sky-200 uppercase tracking-wider">Pendaftaran Berhasil</p>
+                            <p class="text-2xl md:text-3xl font-bold text-white font-mono tracking-tight mt-1">
+                                {{ $registration->registration_number }}
+                            </p>
+                            <p class="mt-2 text-sky-100 text-sm">
+                                <span class="font-semibold text-white">{{ $user->name }}</span>
+                                &mdash; Terdaftar {{ $registration->created_at->translatedFormat('d F Y') }}
+                            </p>
+                        </div>
                     </div>
                     <div class="shrink-0">
                         <span class="inline-flex items-center gap-2 rounded-lg {{ $statusClasses }} px-4 py-2 text-sm font-semibold text-white ring-1">
