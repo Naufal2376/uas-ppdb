@@ -1,21 +1,24 @@
 <?php
 
-// Paksa PHP mencetak semua error sekecil apa pun
+// Paksa PHP mencetak semua error sekecil apa pun (biarkan ini sementara)
 ini_set('display_errors', '1');
 error_reporting(E_ALL);
 
 try {
-    // 1. Panggil Composer Autoloader
     require __DIR__ . '/../vendor/autoload.php';
 
-    // 2. Load aplikasi Laravel 12
-    $app = require_once __DIR__ . '/../bootstrap/app.php';
-
-    // 3. Tentukan folder /tmp sebagai storage utama di Vercel
+    // Pindahkan direktori cache ke /tmp sebelum memuat bootstrap/app.php
     $storagePath = $_ENV['APP_STORAGE'] ?? '/tmp/storage';
-    $app->useStoragePath($storagePath);
+    
+    // Pastikan environment variables untuk cache di-set
+    putenv("APP_CONFIG_CACHE={$storagePath}/framework/cache/config.php");
+    putenv("APP_EVENTS_CACHE={$storagePath}/framework/cache/events.php");
+    putenv("APP_PACKAGES_CACHE={$storagePath}/framework/cache/packages.php");
+    putenv("APP_ROUTES_CACHE={$storagePath}/framework/cache/routes.php");
+    putenv("APP_SERVICES_CACHE={$storagePath}/framework/cache/services.php");
+    putenv("VIEW_COMPILED_PATH={$storagePath}/framework/views");
 
-    // 4. BIKIN SUB-FOLDER OTOMATIS
+    // Buat sub-folder yang dibutuhkan
     $directories = [
         $storagePath . '/app/public',
         $storagePath . '/framework/cache/data',
@@ -26,21 +29,20 @@ try {
 
     foreach ($directories as $dir) {
         if (!is_dir($dir)) {
-            mkdir($dir, 0777, true); // Gunakan 0777 agar Vercel pasti bisa nulis
+            mkdir($dir, 0777, true);
         }
     }
 
-    // 5. Tangkap dan jalankan request
+    $app = require_once __DIR__ . '/../bootstrap/app.php';
+    $app->useStoragePath($storagePath);
+
     $app->handleRequest(Illuminate\Http\Request::capture());
 
 } catch (\Throwable $e) {
-    // 6. TANGKAP SEMUA ERROR FATAL DAN CETAK KE LAYAR!
     echo "<div style='font-family: monospace; background: #ffebee; padding: 20px; border: 1px solid #c62828; color: #b71c1c;'>";
-    echo "<h2>🚨 BINGO! Ini Error Aslinya:</h2>";
+    echo "<h2>🚨 Error Masih Ada:</h2>";
     echo "<b>Pesan:</b> " . $e->getMessage() . "<br><br>";
     echo "<b>File:</b> " . $e->getFile() . "<br>";
     echo "<b>Baris:</b> " . $e->getLine() . "<br><br>";
-    echo "<b>Jejak (Stack Trace):</b><br>";
-    echo nl2br($e->getTraceAsString());
     echo "</div>";
 }
