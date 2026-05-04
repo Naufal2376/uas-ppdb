@@ -2,9 +2,8 @@
     {{-- Header --}}
     <div class="ppdb-hero-banner p-6 mb-6 ppdb-fade-in">
         <div class="relative z-10 flex items-center gap-4">
-            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-white/20">
-                <x-heroicon-o-clipboard-document-list class="h-6 w-6 text-white" />
-            </div>
+            <img src="{{ asset('images/logo.jpg') }}" alt="Logo PPDB"
+                class="h-12 w-12 shrink-0 rounded-lg object-cover ring-2 ring-white/30 shadow-lg" />
             <div>
                 <h2 class="text-lg font-bold text-white tracking-tight">Formulir Pendaftaran PPDB</h2>
                 <p class="mt-0.5 text-sm text-sky-100">Lengkapi semua tahapan berikut dengan data yang benar.</p>
