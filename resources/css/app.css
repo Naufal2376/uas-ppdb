@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
 
 @source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
 @source "../../storage/framework/views/*.php";
@@ -15,4 +16,183 @@
   --color-status-success: #059669;
   --color-status-warning: #f59e0b;
   --color-status-danger: #e11d48;
+}
+
+/* ============================================
+   PPDB Design System — Formal & Clean
+   ============================================ */
+
+/* --- Smooth entrance animations --- */
+.ppdb-fade-in {
+  animation: ppdb-fade-in 0.5s ease-out forwards;
+}
+
+.ppdb-slide-up {
+  animation: ppdb-slide-up 0.5s ease-out forwards;
+}
+
+@keyframes ppdb-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ppdb-slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Staggered delay helpers */
+.ppdb-delay-1 { animation-delay: 0.1s; opacity: 0; animation-fill-mode: forwards; }
+.ppdb-delay-2 { animation-delay: 0.2s; opacity: 0; animation-fill-mode: forwards; }
+.ppdb-delay-3 { animation-delay: 0.3s; opacity: 0; animation-fill-mode: forwards; }
+.ppdb-delay-4 { animation-delay: 0.4s; opacity: 0; animation-fill-mode: forwards; }
+.ppdb-delay-5 { animation-delay: 0.5s; opacity: 0; animation-fill-mode: forwards; }
+
+/* --- Premium Card --- */
+.ppdb-card {
+  background: white;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.ppdb-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 0 8px 24px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
+}
+
+.dark .ppdb-card {
+  background: rgb(30, 41, 59);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* --- Icon Circle Decorative --- */
+.ppdb-icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  padding: 0.625rem;
+}
+
+.ppdb-icon-circle-sky {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+.ppdb-icon-circle-emerald {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.ppdb-icon-circle-amber {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.ppdb-icon-circle-rose {
+  background: #ffe4e6;
+  color: #e11d48;
+}
+
+.ppdb-icon-circle-slate {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+/* --- Hero Banner (Dashboard) --- */
+.ppdb-hero-banner {
+  background: linear-gradient(135deg, #0284c7, #0369a1);
+  border-radius: 1rem;
+  position: relative;
+  overflow: hidden;
+  color: white;
+}
+
+.ppdb-hero-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 400px;
+  height: 400px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.ppdb-hero-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 300px;
+  height: 300px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* --- Status Timeline --- */
+.ppdb-timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.ppdb-timeline-dot {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.ppdb-timeline-dot-active {
+  background: #0284c7;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.2);
+}
+
+.ppdb-timeline-dot-completed {
+  background: #059669;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.15);
+}
+
+.ppdb-timeline-dot-upcoming {
+  background: #e2e8f0;
+  color: #94a3b8;
+}
+
+.ppdb-timeline-dot-rejected {
+  background: #e11d48;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.15);
+}
+
+.ppdb-timeline-connector {
+  position: absolute;
+  top: 20px;
+  left: calc(50% + 24px);
+  right: calc(-50% + 24px);
+  height: 3px;
+  background: #e2e8f0;
+  z-index: 1;
+}
+
+.ppdb-timeline-connector-active {
+  background: #0284c7;
+}
+
+.ppdb-timeline-connector-completed {
+  background: #059669;
 }
