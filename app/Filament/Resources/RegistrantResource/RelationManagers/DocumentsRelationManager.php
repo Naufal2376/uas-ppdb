@@ -9,12 +9,12 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class DocumentsRelationManager extends RelationManager
 {
     protected static string $relationship = 'documents';
+
+    protected static ?string $title = 'Dokumen Pendaftaran';
 
     public function form(Form $form): Form
     {
@@ -23,12 +23,25 @@ class DocumentsRelationManager extends RelationManager
                 Forms\Components\Select::make('document_type')
                     ->label('Tipe Dokumen')
                     ->options([
-                        'foto' => 'Pas Foto',
-                        'kk' => 'Kartu Keluarga',
-                        'ijazah' => 'Ijazah / SKL',
-                        'akta' => 'Akta Kelahiran',
+                        DocumentType::Foto->value => DocumentType::Foto->getLabel(),
+                        DocumentType::KartuKeluarga->value => DocumentType::KartuKeluarga->getLabel(),
+                        DocumentType::Ijazah->value => DocumentType::Ijazah->getLabel(),
+                        DocumentType::AktaKelahiran->value => DocumentType::AktaKelahiran->getLabel(),
                     ])
                     ->required(),
+                Forms\Components\Select::make('status')
+                    ->label('Status Verifikasi')
+                    ->options([
+                        DocumentStatus::Pending->value => DocumentStatus::Pending->getLabel(),
+                        DocumentStatus::Approved->value => DocumentStatus::Approved->getLabel(),
+                        DocumentStatus::Rejected->value => DocumentStatus::Rejected->getLabel(),
+                    ])
+                    ->required(),
+                Forms\Components\Textarea::make('notes')
+                    ->label('Catatan Revisi')
+                    ->rows(3)
+                    ->placeholder('Catatan untuk siswa jika dokumen ditolak')
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -39,45 +52,56 @@ class DocumentsRelationManager extends RelationManager
             ->columns([
                 Tables\Columns\TextColumn::make('document_type')
                     ->label('Tipe Dokumen')
-                    ->formatStateUsing(fn (DocumentType $state) => match ($state) {
-                        DocumentType::Foto => 'Pas Foto',
-                        DocumentType::KartuKeluarga => 'Kartu Keluarga',
-                        DocumentType::Ijazah => 'Ijazah / SKL',
-                        DocumentType::AktaKelahiran => 'Akta Kelahiran',
-                    }),
+                    ->formatStateUsing(fn (DocumentType $state): string => $state->getLabel())
+                    ->weight('bold'),
+
                 Tables\Columns\ImageColumn::make('file_path')
-                    ->label('Preview Dokumen')
+                    ->label('Preview')
+                    ->disk('public')
                     ->square()
-                    ->defaultImageUrl(fn ($record) => asset('storage/' . $record->file_path)),
+                    ->size(60),
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
                     ->color(fn (DocumentStatus $state): string => match ($state) {
                         DocumentStatus::Pending => 'warning',
-                        DocumentStatus::Verified => 'primary',
+                        DocumentStatus::Approved => 'success',
                         DocumentStatus::Rejected => 'danger',
                     })
-                    ->formatStateUsing(fn (DocumentStatus $state) => $state->getLabel()),
+                    ->formatStateUsing(fn (DocumentStatus $state): string => $state->getLabel()),
+
+                Tables\Columns\TextColumn::make('notes')
+                    ->label('Catatan')
+                    ->limit(30)
+                    ->tooltip(fn ($record) => $record?->notes)
+                    ->placeholder('—'),
+
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Terakhir Diperbarui')
+                    ->dateTime('d M Y, H:i')
+                    ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        DocumentStatus::Pending->value => 'Menunggu',
+                        DocumentStatus::Approved->value => 'Disetujui',
+                        DocumentStatus::Rejected->value => 'Ditolak',
+                    ]),
             ])
-            ->headerActions([
-                // Tables\Actions\CreateAction::make(),
-            ])
+            ->headerActions([])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->label('Ubah Status'),
                 Tables\Actions\Action::make('download')
-                    ->label('Download')
+                    ->label('Unduh')
                     ->icon('heroicon-o-arrow-down-tray')
+                    ->color('primary')
                     ->url(fn ($record) => asset('storage/' . $record->file_path))
                     ->openUrlInNewTab(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ]);
+            ->bulkActions([]);
     }
 }

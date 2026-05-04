@@ -6,11 +6,11 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -27,12 +27,28 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandName('SI-PPDB')
+            ->font('Inter')
+            ->sidebarCollapsibleOnDesktop()
             ->colors([
-                'primary' => \Filament\Support\Colors\Color::hex('#0284c7'),
-                'success' => \Filament\Support\Colors\Color::hex('#059669'),
-                'warning' => \Filament\Support\Colors\Color::hex('#f59e0b'),
-                'danger'  => \Filament\Support\Colors\Color::hex('#e11d48'),
-                'gray'    => \Filament\Support\Colors\Color::hex('#64748b'),
+                'primary' => Color::hex('#0284c7'),
+                'success' => Color::hex('#059669'),
+                'warning' => Color::hex('#f59e0b'),
+                'danger'  => Color::hex('#e11d48'),
+                'gray'    => Color::hex('#64748b'),
+                'info'    => Color::hex('#0284c7'),
+            ])
+            ->navigationGroups([
+                NavigationGroup::make()
+                    ->label('Dashboard'),
+                NavigationGroup::make()
+                    ->label('Pendaftaran'),
+                NavigationGroup::make()
+                    ->label('Informasi'),
+                NavigationGroup::make()
+                    ->label('Laporan'),
+                NavigationGroup::make()
+                    ->label('Pengaturan'),
             ])
             ->viteTheme('resources/css/app.css')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
@@ -41,10 +57,7 @@ class AdminPanelProvider extends PanelProvider
                 Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
-            ])
+            ->widgets([])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
