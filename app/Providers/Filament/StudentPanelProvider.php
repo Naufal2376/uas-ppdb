@@ -29,6 +29,8 @@ class StudentPanelProvider extends PanelProvider
             ->registration()
             ->font('Plus Jakarta Sans')
             ->brandName('Portal PPDB')
+            ->brandLogo(fn () => asset('images/logo.jpg'))
+            ->brandLogoHeight('3.5rem')
             ->colors([
                 'primary' => \Filament\Support\Colors\Color::Sky,
                 'success' => \Filament\Support\Colors\Color::Emerald,
