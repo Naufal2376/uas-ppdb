@@ -1,6 +1,6 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-BYM1yh9v.css",
+    "file": "assets/app-DpF_vs_q.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "theme",
@@ -11,7 +11,7 @@
     ]
   },
   "resources/css/filament/admin/theme.css": {
-    "file": "assets/app-BYM1yh9v.css",
+    "file": "assets/app-DpF_vs_q.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "theme",
@@ -22,7 +22,7 @@
     ]
   },
   "resources/css/filament/student/theme.css": {
-    "file": "assets/app-BYM1yh9v.css",
+    "file": "assets/app-DpF_vs_q.css",
     "src": "resources/css/app.css",
     "isEntry": true,
     "name": "theme",
@@ -33,7 +33,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-CcNNqum8.js",
+    "file": "assets/app-taXXq4rK.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true
