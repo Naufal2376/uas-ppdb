@@ -8,6 +8,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/clear-cache', function () {
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+    return 'Cache cleared successfully!';
+});
+
 // Ini rute yang wajib login (kamar terkunci)
 Route::middleware('auth')->group(function () {
     Route::get('/student/download-proof', [PdfController::class, 'downloadProof'])
