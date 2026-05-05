@@ -42,7 +42,10 @@ class StudentPanelProvider extends PanelProvider
                 \Filament\View\PanelsRenderHook::USER_MENU_BEFORE,
                 fn (): string => '<div class="text-sm font-medium text-slate-700 dark:text-slate-300 mr-4">Halo, ' . (auth()->user()?->name ?? 'Guest') . ' 👋</div>'
             )
-            ->viteTheme('resources/css/filament/student/theme.css')
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::HEAD_END,
+                fn (): string => \Illuminate\Support\Facades\Blade::render('@vite(\'resources/css/app.css\')')
+            )
             ->discoverResources(in: app_path('Filament/Student/Resources'), for: 'App\\Filament\\Student\\Resources')
             ->discoverPages(in: app_path('Filament/Student/Pages'), for: 'App\\Filament\\Student\\Pages')
             ->pages([

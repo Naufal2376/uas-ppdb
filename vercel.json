@@ -28,10 +28,6 @@
             "dest": "/public/js/$1"
         },
         {
-            "src": "/livewire/(.*)",
-            "dest": "/public/livewire/$1"
-        },
-        {
             "src": "/favicon.ico",
             "dest": "/public/favicon.ico"
         },
