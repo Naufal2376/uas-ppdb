@@ -196,3 +196,128 @@
 .ppdb-timeline-connector-completed {
   background: #059669;
 }
+
+/* ============================================
+   Login Page — Polished Shared Styles
+   (Applies to both Admin & Student panels)
+   ============================================ */
+
+/* Subtle gradient background */
+.fi-simple-layout {
+  background: linear-gradient(145deg, #f0f9ff 0%, #e0f2fe 45%, #f8fafc 100%);
+}
+
+.dark .fi-simple-layout {
+  background: linear-gradient(145deg, #0c1220 0%, #0f172a 50%, #1e293b 100%);
+}
+
+/* Card — rounded, soft shadow, subtle border */
+.fi-simple-main {
+  border-radius: 1.25rem !important;
+  border: 1px solid rgba(2, 132, 199, 0.12) !important;
+  box-shadow:
+    0 4px 6px rgba(0, 0, 0, 0.04),
+    0 10px 40px rgba(2, 132, 199, 0.1) !important;
+  padding-top: 2.5rem !important;
+  padding-bottom: 2.5rem !important;
+}
+
+.dark .fi-simple-main {
+  border-color: rgba(56, 189, 248, 0.1) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Logo area — extra bottom margin */
+.fi-simple-header {
+  margin-bottom: 0.25rem;
+  gap: 0.5rem;
+}
+
+.fi-simple-header .fi-logo {
+  border-radius: 0.875rem;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.15);
+}
+
+/* Page heading */
+.fi-simple-header-heading {
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+  color: #0f172a !important;
+}
+
+.dark .fi-simple-header-heading {
+  color: #f1f5f9 !important;
+}
+
+/* Input wrapper */
+.fi-simple-page .fi-input-wrp {
+  border-radius: 0.625rem !important;
+  overflow: hidden;
+}
+
+/* Input field */
+.fi-simple-page .fi-input {
+  border-radius: 0.625rem !important;
+  border-color: #cbd5e1 !important;
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.fi-simple-page .fi-input:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12) !important;
+  outline: none !important;
+}
+
+/* Label styling */
+.fi-simple-page .fi-fo-field-wrp label {
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #334155;
+}
+
+.dark .fi-simple-page .fi-fo-field-wrp label {
+  color: #cbd5e1;
+}
+
+/* Submit button */
+.fi-simple-page .fi-btn {
+  border-radius: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  padding-top: 0.6rem !important;
+  padding-bottom: 0.6rem !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.fi-simple-page .fi-btn-color-primary {
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35) !important;
+}
+
+.fi-simple-page .fi-btn-color-primary:hover {
+  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45) !important;
+  transform: translateY(-1px) !important;
+}
+
+.fi-simple-page .fi-btn-color-primary:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3) !important;
+}
+
+/* "Remember me" checkbox area */
+.fi-simple-page .fi-checkbox-label {
+  font-size: 0.875rem;
+  color: #475569;
+}
+
+/* "Forgot password?" link */
+.fi-simple-page a {
+  color: #0284c7;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.fi-simple-page a:hover {
+  color: #0369a1;
+}
