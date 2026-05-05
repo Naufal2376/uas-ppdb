@@ -1,0 +1,1484 @@
+================================================================================
+                    PANDUAN SETUP ADMIN PANEL FILAMENT
+                        Proyek PPDB Laravel 12 + Filament
+================================================================================
+
+DAFTAR ISI:
+1. Prerequisites & Installation
+2. Konfigurasi Database & Models
+3. Membuat Resources untuk Admin Panel
+4. Membuat Custom Pages
+5. Konfigurasi Panel Utama
+6. Setup Roles & Authorization
+7. Membuat Dashboard & Widgets
+8. Publishing & Publikasi Assets
+9. Testing & Deployment
+
+================================================================================
+BAGIAN 1: PREREQUISITES & INSTALLATION
+================================================================================
+
+Sebelum memulai, pastikan Anda sudah memiliki:
+- PHP >= 8.2
+- Laravel 12
+- Composer
+- Node.js & npm
+
+STEP 1.1: Pastikan Filament sudah terinstall
+-----------------------------------------
+
+Jika belum, jalankan:
+    composer require filament/filament:"^3.3"
+    npm install
+    npm run build
+
+
+STEP 1.2: Publish Filament assets
+-----------------------------------------
+
+    php artisan filament:install --panels
+    php artisan migrate
+
+
+================================================================================
+BAGIAN 2: KONFIGURASI DATABASE & MODELS
+================================================================================
+
+STEP 2.1: Pastikan migration sudah dibuat
+-----------------------------------------
+
+Migrations yang diperlukan sudah ada di database/migrations/:
+    - create_users_table
+    - create_student_details_table
+    - create_parent_details_table
+    - create_school_origins_table
+    - create_documents_table
+    - create_registrations_table
+    - create_announcements_table
+    - create_ppdb_schedules_table
+    - create_ppdb_settings_table
+
+Jalankan migrate:
+    php artisan migrate
+
+
+STEP 2.2: Setup Model - User
+-----------------------------------------
+
+File: app/Models/User.php
+
+User model HARUS mengimplementasikan FilamentUser:
+
+    <?php
+
+    namespace App\Models;
+
+    use App\Enums\UserRole;
+    use Illuminate\Foundation\Auth\User as Authenticatable;
+    use Filament\Models\Contracts\FilamentUser;
+    use Filament\Panel;
+
+    class User extends Authenticatable implements FilamentUser
+    {
+        protected $fillable = [
+            'name',
+            'email',
+            'password',
+            'role',
+            'email_verified_at',
+        ];
+
+        protected function casts(): array
+        {
+            return [
+                'email_verified_at' => 'datetime',
+                'password' => 'hashed',
+                'role' => UserRole::class,
+            ];
+        }
+
+        // Method untuk akses Filament Panel
+        public function canAccessPanel(Panel $panel): bool
+        {
+            // Hanya user dengan role ADMIN atau SUPER_ADMIN yang bisa akses
+            return $this->role === UserRole::ADMIN || 
+                   $this->role === UserRole::SUPER_ADMIN;
+        }
+
+        // Relasi dengan Student Detail, Registration, dsb
+        public function studentDetail()
+        {
+            return $this->hasOne(StudentDetail::class);
+        }
+
+        public function registration()
+        {
+            return $this->hasOne(Registration::class);
+        }
+
+        public function announcements()
+        {
+            return $this->hasMany(Announcement::class, 'created_by');
+        }
+    }
+
+
+STEP 2.3: Setup Enum - UserRole
+-----------------------------------------
+
+File: app/Enums/UserRole.php
+
+    <?php
+
+    namespace App\Enums;
+
+    enum UserRole: string
+    {
+        case STUDENT = 'student';
+        case ADMIN = 'admin';
+        case SUPER_ADMIN = 'super_admin';
+
+        public function getLabel(): string
+        {
+            return match($this) {
+                self::STUDENT => 'Siswa',
+                self::ADMIN => 'Admin',
+                self::SUPER_ADMIN => 'Super Admin',
+            };
+        }
+    }
+
+
+STEP 2.4: Setup Enum - DocumentStatus
+-----------------------------------------
+
+File: app/Enums/DocumentStatus.php
+
+    <?php
+
+    namespace App\Enums;
+
+    enum DocumentStatus: string
+    {
+        case PENDING = 'pending';
+        case APPROVED = 'approved';
+        case REJECTED = 'rejected';
+
+        public function getLabel(): string
+        {
+            return match($this) {
+                self::PENDING => 'Menunggu',
+                self::APPROVED => 'Diterima',
+                self::REJECTED => 'Ditolak',
+            };
+        }
+
+        public function getColor(): string
+        {
+            return match($this) {
+                self::PENDING => 'warning',
+                self::APPROVED => 'success',
+                self::REJECTED => 'danger',
+            };
+        }
+    }
+
+
+STEP 2.5: Setup Enum - RegistrationStatus
+-----------------------------------------
+
+File: app/Enums/RegistrationStatus.php
+
+    <?php
+
+    namespace App\Enums;
+
+    enum RegistrationStatus: string
+    {
+        case NOT_STARTED = 'not_started';
+        case IN_PROGRESS = 'in_progress';
+        case PENDING_VERIFICATION = 'pending_verification';
+        case APPROVED = 'approved';
+        case REJECTED = 'rejected';
+        case GRADUATED = 'graduated';
+
+        public function getLabel(): string
+        {
+            return match($this) {
+                self::NOT_STARTED => 'Belum Mulai',
+                self::IN_PROGRESS => 'Sedang Diisi',
+                self::PENDING_VERIFICATION => 'Menunggu Verifikasi',
+                self::APPROVED => 'Diterima',
+                self::REJECTED => 'Ditolak',
+                self::GRADUATED => 'Lulus',
+            };
+        }
+
+        public function getColor(): string
+        {
+            return match($this) {
+                self::NOT_STARTED => 'gray',
+                self::IN_PROGRESS => 'info',
+                self::PENDING_VERIFICATION => 'warning',
+                self::APPROVED => 'success',
+                self::REJECTED => 'danger',
+                self::GRADUATED => 'success',
+            };
+        }
+    }
+
+
+STEP 2.6: Verify Model - StudentDetail
+-----------------------------------------
+
+File: app/Models/StudentDetail.php
+
+    <?php
+
+    namespace App\Models;
+
+    use App\Enums\Gender;
+    use Illuminate\Database\Eloquent\Model;
+    use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+    class StudentDetail extends Model
+    {
+        protected $fillable = [
+            'user_id',
+            'full_name',
+            'date_of_birth',
+            'gender',
+            'phone',
+            'address',
+            'city',
+            'province',
+            'postal_code',
+        ];
+
+        protected function casts(): array
+        {
+            return [
+                'date_of_birth' => 'date',
+                'gender' => Gender::class,
+            ];
+        }
+
+        public function user(): BelongsTo
+        {
+            return $this->belongsTo(User::class);
+        }
+    }
+
+
+STEP 2.7: Verify Model - Registration
+-----------------------------------------
+
+File: app/Models/Registration.php
+
+    <?php
+
+    namespace App\Models;
+
+    use App\Enums\RegistrationStatus;
+    use Illuminate\Database\Eloquent\Model;
+    use Illuminate\Database\Eloquent\Relations\BelongsTo;
+    use Illuminate\Database\Eloquent\Relations\HasMany;
+
+    class Registration extends Model
+    {
+        protected $fillable = [
+            'user_id',
+            'status',
+            'registration_number',
+            'notes',
+            'verified_at',
+            'verified_by',
+        ];
+
+        protected function casts(): array
+        {
+            return [
+                'status' => RegistrationStatus::class,
+                'verified_at' => 'datetime',
+            ];
+        }
+
+        public function user(): BelongsTo
+        {
+            return $this->belongsTo(User::class);
+        }
+
+        public function documents(): HasMany
+        {
+            return $this->hasMany(Document::class);
+        }
+
+        public function parentDetail(): BelongsTo
+        {
+            return $this->belongsTo(ParentDetail::class, 'user_id', 'user_id');
+        }
+
+        public function schoolOrigin(): BelongsTo
+        {
+            return $this->belongsTo(SchoolOrigin::class);
+        }
+    }
+
+
+================================================================================
+BAGIAN 3: MEMBUAT RESOURCES UNTUK ADMIN PANEL
+================================================================================
+
+Resource adalah representasi model di Filament yang menangani CRUD operations.
+
+STEP 3.1: Membuat Resource untuk Announcement
+-----------------------------------------
+
+File: app/Filament/Resources/AnnouncementResource.php
+
+    <?php
+
+    namespace App\Filament\Resources;
+
+    use App\Filament\Resources\AnnouncementResource\Pages;
+    use App\Models\Announcement;
+    use Filament\Forms;
+    use Filament\Forms\Form;
+    use Filament\Resources\Resource;
+    use Filament\Tables;
+    use Filament\Tables\Table;
+    use Filament\Tables\Columns\TextColumn;
+    use Filament\Tables\Columns\ToggleColumn;
+    use Filament\Tables\Filters\Filter;
+
+    class AnnouncementResource extends Resource
+    {
+        protected static ?string $model = Announcement::class;
+
+        protected static ?string $modelLabel = 'Pengumuman';
+
+        protected static ?string $pluralModelLabel = 'Pengumuman';
+
+        protected static ?string $navigationIcon = 'heroicon-o-megaphone';
+
+        protected static ?string $navigationGroup = 'Informasi';
+
+        protected static ?int $navigationSort = 1;
+
+        public static function form(Form $form): Form
+        {
+            return $form
+                ->schema([
+                    Forms\Components\Section::make('Konten Pengumuman')
+                        ->schema([
+                            Forms\Components\TextInput::make('title')
+                                ->label('Judul Pengumuman')
+                                ->required()
+                                ->maxLength(255)
+                                ->columnSpanFull(),
+                            Forms\Components\RichEditor::make('content')
+                                ->label('Isi Pengumuman')
+                                ->required()
+                                ->columnSpanFull(),
+                        ]),
+
+                    Forms\Components\Section::make('Pengaturan Publikasi')
+                        ->schema([
+                            Forms\Components\Toggle::make('is_published')
+                                ->label('Publikasikan')
+                                ->helperText('Aktifkan agar pengumuman terlihat oleh siswa.')
+                                ->default(false),
+                            Forms\Components\DateTimePicker::make('published_at')
+                                ->label('Tanggal Publikasi')
+                                ->native(false),
+                        ]),
+                ]);
+        }
+
+        public static function table(Table $table): Table
+        {
+            return $table
+                ->columns([
+                    TextColumn::make('title')
+                        ->label('Judul')
+                        ->searchable()
+                        ->sortable(),
+                    TextColumn::make('created_at')
+                        ->label('Dibuat Tanggal')
+                        ->dateTime('d M Y H:i')
+                        ->sortable(),
+                    ToggleColumn::make('is_published')
+                        ->label('Dipublikasi'),
+                ])
+                ->filters([
+                    Filter::make('is_published')
+                        ->label('Hanya Dipublikasi')
+                        ->query(fn($query) => $query->where('is_published', true)),
+                ])
+                ->actions([
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make(),
+                ])
+                ->bulkActions([
+                    Tables\Actions\BulkActionGroup::make([
+                        Tables\Actions\DeleteBulkAction::make(),
+                    ]),
+                ]);
+        }
+
+        public static function getRelations(): array
+        {
+            return [];
+        }
+
+        public static function getPages(): array
+        {
+            return [
+                'index' => Pages\ListAnnouncements::route('/'),
+                'create' => Pages\CreateAnnouncement::route('/create'),
+                'edit' => Pages\EditAnnouncement::route('/{record}/edit'),
+            ];
+        }
+    }
+
+Jalankan command:
+    php artisan make:filament-resource Announcement
+
+
+STEP 3.2: Membuat Resource untuk PPDB Schedule
+-----------------------------------------
+
+File: app/Filament/Resources/PpdbScheduleResource.php
+
+    <?php
+
+    namespace App\Filament\Resources;
+
+    use App\Filament\Resources\PpdbScheduleResource\Pages;
+    use App\Models\PpdbSchedule;
+    use Filament\Forms;
+    use Filament\Forms\Form;
+    use Filament\Resources\Resource;
+    use Filament\Tables;
+    use Filament\Tables\Table;
+    use Filament\Tables\Columns\TextColumn;
+
+    class PpdbScheduleResource extends Resource
+    {
+        protected static ?string $model = PpdbSchedule::class;
+
+        protected static ?string $modelLabel = 'Jadwal PPDB';
+
+        protected static ?string $pluralModelLabel = 'Jadwal PPDB';
+
+        protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
+
+        protected static ?string $navigationGroup = 'Pengaturan';
+
+        protected static ?int $navigationSort = 1;
+
+        public static function form(Form $form): Form
+        {
+            return $form
+                ->schema([
+                    Forms\Components\TextInput::make('phase_name')
+                        ->label('Nama Fase')
+                        ->required()
+                        ->maxLength(255),
+                    Forms\Components\DateTimePicker::make('start_date')
+                        ->label('Tanggal Mulai')
+                        ->required()
+                        ->native(false),
+                    Forms\Components\DateTimePicker::make('end_date')
+                        ->label('Tanggal Selesai')
+                        ->required()
+                        ->native(false),
+                    Forms\Components\Textarea::make('description')
+                        ->label('Deskripsi')
+                        ->columnSpanFull(),
+                ]);
+        }
+
+        public static function table(Table $table): Table
+        {
+            return $table
+                ->columns([
+                    TextColumn::make('phase_name')
+                        ->label('Fase')
+                        ->searchable(),
+                    TextColumn::make('start_date')
+                        ->label('Mulai')
+                        ->dateTime('d M Y')
+                        ->sortable(),
+                    TextColumn::make('end_date')
+                        ->label('Selesai')
+                        ->dateTime('d M Y')
+                        ->sortable(),
+                ])
+                ->actions([
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make(),
+                ])
+                ->bulkActions([
+                    Tables\Actions\BulkActionGroup::make([
+                        Tables\Actions\DeleteBulkAction::make(),
+                    ]),
+                ]);
+        }
+
+        public static function getRelations(): array
+        {
+            return [];
+        }
+
+        public static function getPages(): array
+        {
+            return [
+                'index' => Pages\ListPpdbSchedules::route('/'),
+                'create' => Pages\CreatePpdbSchedule::route('/create'),
+                'edit' => Pages\EditPpdbSchedule::route('/{record}/edit'),
+            ];
+        }
+    }
+
+Jalankan command:
+    php artisan make:filament-resource PpdbSchedule
+
+
+STEP 3.3: Membuat Resource untuk Registration (Verifikasi Pendaftar)
+-----------------------------------------
+
+File: app/Filament/Resources/RegistrationResource.php
+
+    <?php
+
+    namespace App\Filament\Resources;
+
+    use App\Filament\Resources\RegistrationResource\Pages;
+    use App\Models\Registration;
+    use App\Enums\RegistrationStatus;
+    use Filament\Forms;
+    use Filament\Forms\Form;
+    use Filament\Resources\Resource;
+    use Filament\Tables;
+    use Filament\Tables\Table;
+    use Filament\Tables\Columns\TextColumn;
+    use Filament\Tables\Columns\BadgeColumn;
+
+    class RegistrationResource extends Resource
+    {
+        protected static ?string $model = Registration::class;
+
+        protected static ?string $modelLabel = 'Verifikasi Pendaftar';
+
+        protected static ?string $pluralModelLabel = 'Verifikasi Pendaftar';
+
+        protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
+
+        protected static ?string $navigationGroup = 'Verifikasi';
+
+        protected static ?int $navigationSort = 1;
+
+        public static function form(Form $form): Form
+        {
+            return $form
+                ->schema([
+                    Forms\Components\Section::make('Data Pendaftar')
+                        ->schema([
+                            Forms\Components\TextInput::make('registration_number')
+                                ->label('Nomor Pendaftaran')
+                                ->disabled(),
+                            Forms\Components\Select::make('user_id')
+                                ->label('Siswa')
+                                ->relationship('user', 'name')
+                                ->searchable()
+                                ->disabled(),
+                        ]),
+
+                    Forms\Components\Section::make('Status Pendaftaran')
+                        ->schema([
+                            Forms\Components\Select::make('status')
+                                ->label('Status')
+                                ->options(RegistrationStatus::class)
+                                ->required(),
+                            Forms\Components\DateTimePicker::make('verified_at')
+                                ->label('Diverifikasi Tanggal')
+                                ->native(false),
+                            Forms\Components\Textarea::make('notes')
+                                ->label('Catatan')
+                                ->columnSpanFull(),
+                        ]),
+                ]);
+        }
+
+        public static function table(Table $table): Table
+        {
+            return $table
+                ->columns([
+                    TextColumn::make('registration_number')
+                        ->label('Nomor Daftar')
+                        ->searchable(),
+                    TextColumn::make('user.name')
+                        ->label('Nama Siswa')
+                        ->searchable(),
+                    TextColumn::make('user.email')
+                        ->label('Email')
+                        ->searchable(),
+                    BadgeColumn::make('status')
+                        ->label('Status')
+                        ->formatStateUsing(fn($state) => $state->getLabel())
+                        ->color(fn($state) => $state->getColor()),
+                    TextColumn::make('verified_at')
+                        ->label('Diverifikasi')
+                        ->dateTime('d M Y H:i')
+                        ->sortable(),
+                ])
+                ->actions([
+                    Tables\Actions\EditAction::make(),
+                ])
+                ->bulkActions([
+                    Tables\Actions\BulkActionGroup::make([]),
+                ]);
+        }
+
+        public static function getRelations(): array
+        {
+            return [];
+        }
+
+        public static function getPages(): array
+        {
+            return [
+                'index' => Pages\ListRegistrations::route('/'),
+                'edit' => Pages\EditRegistration::route('/{record}/edit'),
+            ];
+        }
+    }
+
+Jalankan command:
+    php artisan make:filament-resource Registration
+
+
+STEP 3.4: Membuat Resource untuk Document Verification
+-----------------------------------------
+
+File: app/Filament/Resources/DocumentResource.php
+
+    <?php
+
+    namespace App\Filament\Resources;
+
+    use App\Filament\Resources\DocumentResource\Pages;
+    use App\Models\Document;
+    use App\Enums\DocumentStatus;
+    use Filament\Forms;
+    use Filament\Forms\Form;
+    use Filament\Resources\Resource;
+    use Filament\Tables;
+    use Filament\Tables\Table;
+    use Filament\Tables\Columns\TextColumn;
+    use Filament\Tables\Columns\BadgeColumn;
+
+    class DocumentResource extends Resource
+    {
+        protected static ?string $model = Document::class;
+
+        protected static ?string $modelLabel = 'Verifikasi Dokumen';
+
+        protected static ?string $pluralModelLabel = 'Verifikasi Dokumen';
+
+        protected static ?string $navigationIcon = 'heroicon-o-document-check';
+
+        protected static ?string $navigationGroup = 'Verifikasi';
+
+        protected static ?int $navigationSort = 2;
+
+        public static function form(Form $form): Form
+        {
+            return $form
+                ->schema([
+                    Forms\Components\Section::make('Data Dokumen')
+                        ->schema([
+                            Forms\Components\TextInput::make('document_type')
+                                ->label('Jenis Dokumen')
+                                ->disabled(),
+                            Forms\Components\TextInput::make('file_path')
+                                ->label('File')
+                                ->disabled(),
+                        ]),
+
+                    Forms\Components\Section::make('Verifikasi')
+                        ->schema([
+                            Forms\Components\Select::make('status')
+                                ->label('Status')
+                                ->options(DocumentStatus::class)
+                                ->required(),
+                            Forms\Components\Textarea::make('rejection_reason')
+                                ->label('Alasan Penolakan'),
+                            Forms\Components\DateTimePicker::make('verified_at')
+                                ->label('Diverifikasi Tanggal')
+                                ->native(false),
+                        ]),
+                ]);
+        }
+
+        public static function table(Table $table): Table
+        {
+            return $table
+                ->columns([
+                    TextColumn::make('registration.registration_number')
+                        ->label('Nomor Pendaftaran')
+                        ->searchable(),
+                    TextColumn::make('registration.user.name')
+                        ->label('Nama Siswa')
+                        ->searchable(),
+                    TextColumn::make('document_type')
+                        ->label('Jenis Dokumen')
+                        ->searchable(),
+                    BadgeColumn::make('status')
+                        ->label('Status')
+                        ->formatStateUsing(fn($state) => $state->getLabel())
+                        ->color(fn($state) => $state->getColor()),
+                    TextColumn::make('verified_at')
+                        ->label('Diverifikasi')
+                        ->dateTime('d M Y H:i'),
+                ])
+                ->actions([
+                    Tables\Actions\EditAction::make(),
+                ])
+                ->bulkActions([
+                    Tables\Actions\BulkActionGroup::make([]),
+                ]);
+        }
+
+        public static function getRelations(): array
+        {
+            return [];
+        }
+
+        public static function getPages(): array
+        {
+            return [
+                'index' => Pages\ListDocuments::route('/'),
+                'edit' => Pages\EditDocument::route('/{record}/edit'),
+            ];
+        }
+    }
+
+Jalankan command:
+    php artisan make:filament-resource Document
+
+
+================================================================================
+BAGIAN 4: MEMBUAT CUSTOM PAGES
+================================================================================
+
+Custom Pages adalah halaman custom yang tidak langsung terikat ke model.
+
+STEP 4.1: Membuat Page untuk PPDB Settings
+-----------------------------------------
+
+File: app/Filament/Pages/ManagePpdbSettings.php
+
+    <?php
+
+    namespace App\Filament\Pages;
+
+    use App\Models\PpdbSetting;
+    use Filament\Forms;
+    use Filament\Forms\Concerns\InteractsWithForms;
+    use Filament\Forms\Contracts\HasForms;
+    use Filament\Forms\Form;
+    use Filament\Pages\Page;
+    use Filament\Support\Exceptions\Halt;
+
+    class ManagePpdbSettings extends Page implements HasForms
+    {
+        use InteractsWithForms;
+
+        protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
+
+        protected static ?string $navigationGroup = 'Pengaturan';
+
+        protected static ?int $navigationSort = 2;
+
+        protected static string $view = 'filament.pages.manage-ppdb-settings';
+
+        public PpdbSetting $setting;
+
+        public ?array $data = [];
+
+        public function mount(): void
+        {
+            $this->setting = PpdbSetting::firstOrCreate([]);
+            $this->form->fill($this->setting->attributesToArray());
+        }
+
+        public function form(Form $form): Form
+        {
+            return $form
+                ->schema([
+                    Forms\Components\Section::make('Pengaturan Umum PPDB')
+                        ->schema([
+                            Forms\Components\TextInput::make('school_name')
+                                ->label('Nama Sekolah')
+                                ->required()
+                                ->maxLength(255),
+                            Forms\Components\TextInput::make('max_students')
+                                ->label('Kuota Siswa Maksimal')
+                                ->numeric()
+                                ->required(),
+                        ]),
+
+                    Forms\Components\Section::make('Kontak & Alamat')
+                        ->schema([
+                            Forms\Components\TextInput::make('phone')
+                                ->label('Nomor Telepon')
+                                ->tel(),
+                            Forms\Components\TextInput::make('email')
+                                ->label('Email')
+                                ->email(),
+                            Forms\Components\Textarea::make('address')
+                                ->label('Alamat')
+                                ->columnSpanFull(),
+                        ]),
+
+                    Forms\Components\Section::make('Pengaturan Sistem')
+                        ->schema([
+                            Forms\Components\Toggle::make('is_registration_open')
+                                ->label('Buka Pendaftaran'),
+                            Forms\Components\Toggle::make('is_verification_enabled')
+                                ->label('Aktifkan Verifikasi'),
+                        ]),
+                ])
+                ->statePath('data');
+        }
+
+        public function save(): void
+        {
+            try {
+                $data = $this->form->getState();
+                $this->setting->update($data);
+            } catch (Halt $exception) {
+                throw $exception;
+            }
+
+            $this->notify('success', 'Pengaturan berhasil disimpan.');
+        }
+    }
+
+View file: resources/views/filament/pages/manage-ppdb-settings.blade.php
+
+    <x-filament-panels::page>
+        <form wire:submit="save" class="space-y-6">
+            {{ $this->form }}
+            <x-filament::button type="submit">
+                Simpan Pengaturan
+            </x-filament::button>
+        </form>
+    </x-filament-panels::page>
+
+Jalankan command:
+    php artisan make:filament-page ManagePpdbSettings
+
+
+STEP 4.2: Membuat Dashboard Report Page
+-----------------------------------------
+
+File: app/Filament/Pages/ReportDashboard.php
+
+    <?php
+
+    namespace App\Filament\Pages;
+
+    use App\Models\Registration;
+    use App\Models\StudentDetail;
+    use App\Models\Document;
+    use App\Enums\RegistrationStatus;
+    use Filament\Pages\Page;
+
+    class ReportDashboard extends Page
+    {
+        protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
+
+        protected static ?string $navigationGroup = 'Laporan';
+
+        protected static ?int $navigationSort = 1;
+
+        protected static string $view = 'filament.pages.report-dashboard';
+
+        public function getHeading(): string
+        {
+            return 'Dashboard Laporan';
+        }
+
+        public function getStatistics(): array
+        {
+            return [
+                'total_registrations' => Registration::count(),
+                'approved_registrations' => Registration::where('status', RegistrationStatus::APPROVED)->count(),
+                'pending_registrations' => Registration::where('status', RegistrationStatus::PENDING_VERIFICATION)->count(),
+                'rejected_registrations' => Registration::where('status', RegistrationStatus::REJECTED)->count(),
+                'total_documents' => Document::count(),
+                'verified_documents' => Document::where('status', 'approved')->count(),
+            ];
+        }
+    }
+
+View file: resources/views/filament/pages/report-dashboard.blade.php
+
+    <x-filament-panels::page>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            @php
+                $stats = $this->getStatistics();
+            @endphp
+
+            <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
+                <h3 class="text-sm font-semibold text-blue-900">Total Pendaftar</h3>
+                <p class="text-3xl font-bold text-blue-600">{{ $stats['total_registrations'] }}</p>
+            </div>
+
+            <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+                <h3 class="text-sm font-semibold text-green-900">Diterima</h3>
+                <p class="text-3xl font-bold text-green-600">{{ $stats['approved_registrations'] }}</p>
+            </div>
+
+            <div class="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
+                <h3 class="text-sm font-semibold text-yellow-900">Menunggu Verifikasi</h3>
+                <p class="text-3xl font-bold text-yellow-600">{{ $stats['pending_registrations'] }}</p>
+            </div>
+
+            <div class="bg-red-50 p-6 rounded-lg border border-red-200">
+                <h3 class="text-sm font-semibold text-red-900">Ditolak</h3>
+                <p class="text-3xl font-bold text-red-600">{{ $stats['rejected_registrations'] }}</p>
+            </div>
+
+            <div class="bg-purple-50 p-6 rounded-lg border border-purple-200">
+                <h3 class="text-sm font-semibold text-purple-900">Total Dokumen</h3>
+                <p class="text-3xl font-bold text-purple-600">{{ $stats['total_documents'] }}</p>
+            </div>
+
+            <div class="bg-indigo-50 p-6 rounded-lg border border-indigo-200">
+                <h3 class="text-sm font-semibold text-indigo-900">Dokumen Terverifikasi</h3>
+                <p class="text-3xl font-bold text-indigo-600">{{ $stats['verified_documents'] }}</p>
+            </div>
+        </div>
+    </x-filament-panels::page>
+
+Jalankan command:
+    php artisan make:filament-page ReportDashboard
+
+
+================================================================================
+BAGIAN 5: KONFIGURASI PANEL UTAMA
+================================================================================
+
+STEP 5.1: Membuat atau Update Panel Configuration
+-----------------------------------------
+
+File: app/Providers/Filament/AdminPanelProvider.php
+
+Jika belum ada, buat dengan command:
+    php artisan make:filament-panel admin
+
+Isinya:
+
+    <?php
+
+    namespace App\Providers\Filament;
+
+    use Filament\Http\Middleware\Authenticate;
+    use Filament\Http\Middleware\DisableBladeIconComponents;
+    use Filament\Http\Middleware\DispatchServingFilamentEvent;
+    use Filament\Pages;
+    use Filament\Panel;
+    use Filament\PanelProvider;
+    use Filament\Support\Colors\Color;
+    use Filament\Widgets;
+    use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+    use Illuminate\Cookie\Middleware\EncryptCookies;
+    use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+    use Illuminate\Routing\Middleware\SubstituteBindings;
+    use Illuminate\Session\Middleware\AuthenticateSession;
+    use Illuminate\Session\Middleware\StartSession;
+    use Illuminate\View\Middleware\ShareErrorsFromSession;
+
+    class AdminPanelProvider extends PanelProvider
+    {
+        public function panel(Panel $panel): Panel
+        {
+            return $panel
+                ->default()
+                ->id('admin')
+                ->path('admin')
+                ->login()
+                ->colors([
+                    'primary' => Color::Blue,
+                ])
+                ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+                ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+                ->pages([
+                    Pages\Dashboard::class,
+                ])
+                ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+                ->widgets([
+                    Widgets\AccountWidget::class,
+                    Widgets\FilamentInfoWidget::class,
+                ])
+                ->middleware([
+                    EncryptCookies::class,
+                    AddQueuedCookiesToResponse::class,
+                    StartSession::class,
+                    AuthenticateSession::class,
+                    ShareErrorsFromSession::class,
+                    VerifyCsrfToken::class,
+                    SubstituteBindings::class,
+                    DisableBladeIconComponents::class,
+                    DispatchServingFilamentEvent::class,
+                ])
+                ->authMiddleware([
+                    Authenticate::class,
+                ]);
+        }
+    }
+
+
+STEP 5.2: Konfigurasi Routes
+-----------------------------------------
+
+Pastikan dalam routes/web.php atau routes/api.php tidak ada yang menghalangi.
+Filament akan otomatis register routes /admin.
+
+Routes dapat diakses:
+- /admin                    -> Dashboard
+- /admin/announcements      -> Kelola Pengumuman
+- /admin/ppdb-schedules     -> Kelola Jadwal PPDB
+- /admin/registrations      -> Verifikasi Pendaftar
+- /admin/documents          -> Verifikasi Dokumen
+
+
+================================================================================
+BAGIAN 6: SETUP ROLES & AUTHORIZATION
+================================================================================
+
+STEP 6.1: Membuat Authorization Middleware untuk Panel Access
+-----------------------------------------
+
+Update app/Models/User.php - method canAccessPanel():
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Hanya ADMIN dan SUPER_ADMIN yang bisa akses admin panel
+        return in_array($this->role, [UserRole::ADMIN, UserRole::SUPER_ADMIN]);
+    }
+
+
+STEP 6.2: Membuat Authorization untuk Resource Tertentu (opsional)
+-----------------------------------------
+
+Untuk membuat verifikasi permission per resource, tambahkan ke Resource:
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->role === UserRole::ADMIN || 
+               auth()->user()->role === UserRole::SUPER_ADMIN;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->role === UserRole::SUPER_ADMIN;
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()->role === UserRole::SUPER_ADMIN ||
+               auth()->user()->role === UserRole::ADMIN;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()->role === UserRole::SUPER_ADMIN;
+    }
+
+
+================================================================================
+BAGIAN 7: MEMBUAT DASHBOARD & WIDGETS
+================================================================================
+
+STEP 7.1: Membuat Custom Dashboard Widget
+-----------------------------------------
+
+File: app/Filament/Widgets/RegistrationOverviewWidget.php
+
+    <?php
+
+    namespace App\Filament\Widgets;
+
+    use App\Models\Registration;
+    use App\Enums\RegistrationStatus;
+    use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+    use Filament\Widgets\StatsOverviewWidget\Stat;
+
+    class RegistrationOverviewWidget extends BaseWidget
+    {
+        protected function getStats(): array
+        {
+            return [
+                Stat::make(
+                    'Total Pendaftar',
+                    Registration::count()
+                )
+                    ->description('Semua pendaftar')
+                    ->descriptionIcon('heroicon-m-arrow-trending-up')
+                    ->color('success'),
+
+                Stat::make(
+                    'Diterima',
+                    Registration::where('status', RegistrationStatus::APPROVED)->count()
+                )
+                    ->description('Diterima dalam PPDB')
+                    ->descriptionIcon('heroicon-m-check-circle')
+                    ->color('success'),
+
+                Stat::make(
+                    'Menunggu Verifikasi',
+                    Registration::where('status', RegistrationStatus::PENDING_VERIFICATION)->count()
+                )
+                    ->description('Perlu diverifikasi')
+                    ->descriptionIcon('heroicon-m-clock')
+                    ->color('warning'),
+
+                Stat::make(
+                    'Ditolak',
+                    Registration::where('status', RegistrationStatus::REJECTED)->count()
+                )
+                    ->description('Pendaftar ditolak')
+                    ->descriptionIcon('heroicon-m-x-circle')
+                    ->color('danger'),
+            ];
+        }
+    }
+
+
+STEP 7.2: Membuat Chart Widget
+-----------------------------------------
+
+File: app/Filament/Widgets/RegistrationChartWidget.php
+
+    <?php
+
+    namespace App\Filament\Widgets;
+
+    use App\Models\Registration;
+    use Filament\Widgets\ChartWidget;
+    use Illuminate\Support\Carbon;
+
+    class RegistrationChartWidget extends ChartWidget
+    {
+        protected static ?string $heading = 'Registrasi Pendaftar Per Bulan';
+
+        protected function getData(): array
+        {
+            $data = [];
+            for ($i = 6; $i >= 0; $i--) {
+                $date = now()->subMonths($i)->startOfMonth();
+                $count = Registration::whereBetween('created_at', [
+                    $date->copy()->startOfMonth(),
+                    $date->copy()->endOfMonth(),
+                ])->count();
+                $data[Carbon::parse($date)->format('M Y')] = $count;
+            }
+
+            return [
+                'datasets' => [
+                    [
+                        'label' => 'Pendaftar',
+                        'data' => array_values($data),
+                        'borderColor' => '#3B82F6',
+                        'backgroundColor' => 'rgba(59, 130, 246, 0.1)',
+                    ],
+                ],
+                'labels' => array_keys($data),
+            ];
+        }
+
+        protected function getType(): string
+        {
+            return 'line';
+        }
+    }
+
+
+STEP 7.3: Register Widgets ke Dashboard
+-----------------------------------------
+
+Update app/Providers/Filament/AdminPanelProvider.php:
+
+    ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+    ->widgets([
+        Widgets\AccountWidget::class,
+        // Tambahkan custom widgets di sini jika tidak auto-discover
+        RegistrationOverviewWidget::class,
+        RegistrationChartWidget::class,
+    ])
+
+
+================================================================================
+BAGIAN 8: PUBLISHING & PUBLIKASI ASSETS
+================================================================================
+
+STEP 8.1: Publish Filament Configuration
+-----------------------------------------
+
+    php artisan vendor:publish --tag=filament-config
+
+
+STEP 8.2: Publish Filament Assets
+-----------------------------------------
+
+    php artisan filament:publish
+
+
+STEP 8.3: Build Frontend Assets
+-----------------------------------------
+
+    npm run build
+
+Atau untuk development:
+    npm run dev
+
+
+STEP 8.4: Clear Cache
+-----------------------------------------
+
+    php artisan cache:clear
+    php artisan config:clear
+    php artisan view:clear
+
+
+================================================================================
+BAGIAN 9: TESTING & DEPLOYMENT
+================================================================================
+
+STEP 9.1: Test Admin Panel Locally
+-----------------------------------------
+
+1. Pastikan database sudah di-migrate:
+    php artisan migrate
+
+2. Buat user admin untuk testing:
+    php artisan tinker
+
+    Di dalam tinker:
+    >>> use App\Models\User;
+    >>> use App\Enums\UserRole;
+    >>> User::create([
+    ...     'name' => 'Admin',
+    ...     'email' => 'admin@example.com',
+    ...     'password' => bcrypt('password'),
+    ...     'role' => UserRole::ADMIN
+    ... ]);
+
+3. Jalankan server:
+    php artisan serve
+
+4. Akses admin panel di:
+    http://localhost:8000/admin
+
+5. Login dengan:
+    Email: admin@example.com
+    Password: password
+
+
+STEP 9.2: Verify Resources Berfungsi
+-----------------------------------------
+
+Pastikan semua Resource muncul di admin panel:
+    ✓ Pengumuman (Announcements)
+    ✓ Jadwal PPDB (PPDB Schedules)
+    ✓ Verifikasi Pendaftar (Registrations)
+    ✓ Verifikasi Dokumen (Documents)
+
+Test CRUD operations:
+    - Buat data baru
+    - Edit data
+    - Hapus data
+    - Filter dan search
+
+
+STEP 9.3: Verify Pages Berfungsi
+-----------------------------------------
+
+Test custom pages:
+    ✓ Dashboard Laporan (/admin/report-dashboard)
+    ✓ Pengaturan PPDB (/admin/manage-ppdb-settings)
+
+
+STEP 9.4: Database Seeding (opsional)
+-----------------------------------------
+
+Buat seeder untuk data dummy:
+
+File: database/seeders/AdminUserSeeder.php
+
+    <?php
+
+    namespace Database\Seeders;
+
+    use App\Models\User;
+    use App\Enums\UserRole;
+    use Illuminate\Database\Seeder;
+
+    class AdminUserSeeder extends Seeder
+    {
+        public function run(): void
+        {
+            User::create([
+                'name' => 'Super Admin',
+                'email' => 'superadmin@ppdb.com',
+                'password' => bcrypt('password'),
+                'role' => UserRole::SUPER_ADMIN,
+                'email_verified_at' => now(),
+            ]);
+
+            User::create([
+                'name' => 'Admin Verifikasi',
+                'email' => 'admin@ppdb.com',
+                'password' => bcrypt('password'),
+                'role' => UserRole::ADMIN,
+                'email_verified_at' => now(),
+            ]);
+        }
+    }
+
+Jalankan seeder:
+    php artisan db:seed --class=AdminUserSeeder
+
+
+STEP 9.5: Production Deployment
+-----------------------------------------
+
+1. Pastikan .env sudah ter-set dengan benar:
+    APP_ENV=production
+    APP_DEBUG=false
+    DB_CONNECTION=mysql
+    DB_HOST=...
+    DB_DATABASE=...
+    DB_USERNAME=...
+    DB_PASSWORD=...
+
+2. Install dependencies:
+    composer install --optimize-autoloader --no-dev
+    npm install
+
+3. Generate app key:
+    php artisan key:generate
+
+4. Run migrations:
+    php artisan migrate --force
+
+5. Build assets:
+    npm run build
+
+6. Cache configuration:
+    php artisan config:cache
+    php artisan route:cache
+    php artisan view:cache
+
+7. Set proper permissions:
+    chmod -R 755 storage/
+    chmod -R 755 bootstrap/cache/
+
+8. Restart queue worker (jika ada):
+    php artisan queue:restart
+
+
+================================================================================
+BAGIAN 10: CHECKLIST FINAL
+================================================================================
+
+Sebelum go-live, pastikan sudah melakukan:
+
+BACKEND CHECKLIST:
+  ☐ Semua Models sudah dibuat dengan relasi yang benar
+  ☐ Semua Enums sudah dibuat dengan label dan color
+  ☐ Migrations sudah di-run
+  ☐ Seeder sudah di-run (minimal admin user)
+  ☐ Semua Resources sudah dibuat
+  ☐ Custom Pages sudah dibuat
+  ☐ Panel configuration sudah benar
+  ☐ Authorization/middleware sudah ter-set
+  ☐ Widgets sudah ter-register
+  ☐ Filament assets sudah ter-publish
+
+FRONTEND CHECKLIST:
+  ☐ Assets sudah di-build
+  ☐ Tailwind CSS sudah di-compile
+  ☐ Icons sudah ter-load (Heroicon)
+
+TESTING CHECKLIST:
+  ☐ Admin bisa login
+  ☐ Semua resources bisa diakses
+  ☐ CRUD operations berfungsi
+  ☐ Search & filter berfungsi
+  ☐ Validasi form berfungsi
+  ☐ Custom pages berfungsi
+  ☐ Dashboard widgets muncul
+
+DEPLOYMENT CHECKLIST:
+  ☐ Environment variables sudah di-set
+  ☐ Database sudah di-migrate
+  ☐ Permissions sudah di-set
+  ☐ Assets sudah di-build
+  ☐ Cache sudah di-clear
+  ☐ Monitoring/logging sudah berjalan
+
+
+================================================================================
+QUICK REFERENCE - COMMANDS YANG SERING DIGUNAKAN
+================================================================================
+
+# Membuat Resource baru
+php artisan make:filament-resource ModelName
+
+# Membuat Custom Page
+php artisan make:filament-page PageName
+
+# Membuat Widget
+php artisan make:filament-widget WidgetName
+
+# Publish Filament assets
+php artisan filament:publish
+
+# Clear semua cache
+php artisan cache:clear && php artisan config:clear && php artisan view:clear
+
+# Migrate database
+php artisan migrate
+
+# Seed database
+php artisan db:seed
+
+# Tinker (debugging)
+php artisan tinker
+
+# Build assets
+npm run build
+
+# Dev server dengan hot reload
+npm run dev
+
+
+================================================================================
+SETUP COMPLETE!
+================================================================================
+
+Jika mengikuti semua langkah di atas, admin panel Filament sudah siap digunakan.
+
+Untuk dokumentasi lebih lanjut:
+- Filament Documentation: https://filamentphp.com/docs
+- Laravel Documentation: https://laravel.com/docs/12.x
+
+Selamat menggunakan Admin Panel Filament!
+
+================================================================================

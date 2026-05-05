@@ -240,18 +240,6 @@
                             <p class="text-xs text-slate-500">Download bukti pendaftaran resmi dalam format PDF</p>
                         </div>
                     </div>
-                    @if (in_array($statusValue, ['verified', 'approved']))
-                        <a href="#"
-                           class="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 transition-colors">
-                            <x-heroicon-s-arrow-down-tray class="h-4 w-4" />
-                            Download PDF
-                        </a>
-                    @else
-                        <span class="inline-flex items-center gap-2 rounded-lg bg-slate-100 dark:bg-slate-800 px-5 py-2.5 text-sm font-medium text-slate-400 cursor-not-allowed">
-                            <x-heroicon-s-lock-closed class="h-4 w-4" />
-                            Belum Tersedia
-                        </span>
-                    @endif
                 </div>
             </div>
         </div>
