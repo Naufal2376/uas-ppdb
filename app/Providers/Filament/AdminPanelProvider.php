@@ -28,15 +28,16 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->brandName('SI-PPDB')
-            ->font('Inter')
+            ->brandLogo(fn() => asset('images/logo.jpg'))
+            ->brandLogoHeight('3.5rem')
+            ->font('Plus Jakarta Sans')
             ->sidebarCollapsibleOnDesktop()
             ->colors([
-                'primary' => Color::hex('#0284c7'),
-                'success' => Color::hex('#059669'),
-                'warning' => Color::hex('#f59e0b'),
-                'danger'  => Color::hex('#e11d48'),
-                'gray'    => Color::hex('#64748b'),
-                'info'    => Color::hex('#0284c7'),
+                'primary' => Color::Sky,
+                'success' => Color::Emerald,
+                'warning' => Color::Amber,
+                'danger' => Color::Rose,
+                'gray' => Color::Slate,
             ])
             ->navigationGroups([
                 NavigationGroup::make()
@@ -50,7 +51,10 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()
                     ->label('Pengaturan'),
             ])
-            ->viteTheme('resources/css/filament/admin/theme.css')
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::HEAD_END,
+                fn(): string => \Illuminate\Support\Facades\Blade::render('@vite(\'resources/css/app.css\')')
+            )
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
