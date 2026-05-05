@@ -3,9 +3,33 @@
     "file": "assets/app-BYM1yh9v.css",
     "src": "resources/css/app.css",
     "isEntry": true,
-    "name": "app",
+    "name": "theme",
     "names": [
-      "app.css"
+      "app.css",
+      "theme.css",
+      "theme.css"
+    ]
+  },
+  "resources/css/filament/admin/theme.css": {
+    "file": "assets/app-BYM1yh9v.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "theme",
+    "names": [
+      "app.css",
+      "theme.css",
+      "theme.css"
+    ]
+  },
+  "resources/css/filament/student/theme.css": {
+    "file": "assets/app-BYM1yh9v.css",
+    "src": "resources/css/app.css",
+    "isEntry": true,
+    "name": "theme",
+    "names": [
+      "app.css",
+      "theme.css",
+      "theme.css"
     ]
   },
   "resources/js/app.js": {
